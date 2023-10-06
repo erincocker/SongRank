@@ -105,7 +105,10 @@ class App:
     def get_songs(self, filename: str):
         with open(filename) as file:
             for line in csv.reader(file, delimiter=','):
-                App.Songs.append([line[0],line[1]])
+                if len(line) == 1:
+                    App.Songs.append([line[0]])
+                elif len(line) == 2:
+                    App.Songs.append([line[0],line[1]])
 
 
     #want to choose one song from songbook then one from masterlist that
