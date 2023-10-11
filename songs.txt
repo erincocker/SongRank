@@ -68,9 +68,9 @@ All Too Well,Red
 I Almost Do,Red
 We Are Never Ever Getting Back Together,Red
 Stay Stay Stay,Red
-The Last Time (Gary Lightbody),Red
+The Last Time (feat. Gary Lightbody),Red
 Holy Ground,Red
-Sad Beautiful Tragic,Red,
+Sad Beautiful Tragic,Red
 The Lucky One,Red
 Everything Has Changed (Ed Sheeran),Red
 Starlight,Red
@@ -78,6 +78,7 @@ Begin Again,Red
 The Moment I Knew,Red
 Come Back...Be Here,Red
 Girl At Home,Red
+State Of Grace (Acoustic Version),Red
 Ronan,Red
 Better Man,Red
 Nothing New (feat. Phoebe Bridgers),Red
@@ -111,7 +112,7 @@ Don't Blame me,Rep
 Delicate,Rep
 Look What You Made Me Do,Rep
 So It Goes...,Rep
-Gorgeous,Rep,
+Gorgeous,Rep
 Getaway Car,Rep
 King Of My Heart,Rep
 Dancing With Our Hands Tied,Rep
@@ -159,7 +160,7 @@ champagne problems,Evermore
 gold rush,Evermore
 'tis the damn season,Evermore
 tolerate it,Evermore
-"no body, no crime (feat. Haim)",Evermore,
+"no body, no crime (feat. Haim)",Evermore
 happiness,Evermore
 dorothea,Evermore
 coney island (feat. The National),Evermore
