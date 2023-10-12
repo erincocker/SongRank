@@ -1,16 +1,76 @@
 import csv
 from random import choice, randint
 import json
+import pygame
+
+pygame.init()
+
+pink_bg = (239, 208, 202)
+teal = (15, 163, 177)
+pink = (219, 83, 117)
+navy = (28, 48, 65)
+lilac = (163, 149, 198)
+bigger_font = pygame.font.SysFont("Calibri", 80, bold=True)
+big_font = pygame.font.SysFont("Calibri", 60, bold=True)
+font = pygame.font.SysFont("Calibri", 30, bold=True)
 
 
+# (each string in text is a new line)
+# display (multiple) lines of text centred at (x,y)
+def display_text(
+    surface, text: list, font: pygame.font.Font, colour: tuple, x: int, y: int
+):
+    height = font.render(text[0], True, colour).get_height()
+    starting_y = y - (height * len(text) / 2)
+
+    for row, line in enumerate(text):
+        img = font.render(line, True, colour)
+        surface.blit(img, (x - (img.get_width() / 2), starting_y + row * height))
+
+
+# button class based on coding with russ' tutorial
+class Button:
+    def __init__(
+        self,
+        centre_x: int,
+        centre_y: int,
+        image,
+        desired_width: int,
+        desired_height: int,
+    ):
+        self.image = pygame.transform.scale(image, (desired_width, desired_height))
+        self.rect = self.image.get_rect()
+        self.rect.center = (centre_x, centre_y)
+        self.clicked = False
+
+    # draw button on screen and check for button press
+    # if button press, return True
+    def draw(self, surface):
+        button_press = False  # true when button gets pressed
+        position = pygame.mouse.get_pos()
+
+        if pygame.mouse.get_pressed()[0] == 1:
+            if self.rect.collidepoint(position) and self.clicked == False:
+                button_press = True  # only true if the button goes from not pressed
+                # to pressed while on the button
+            self.clicked = True
+
+        if pygame.mouse.get_pressed()[0] == 0:
+            self.clicked = False
+
+        surface.blit(self.image, (self.rect.x, self.rect.y))
+        return button_press
+
+
+# inner mechanisms
 class SongLists:
     def __init__(self):
         # initial list: songs yet to be added to master list
         # though it's a dictionary so we can access songs by id
         self.initial_list = {}
-        for i in range(len(App.Songs)):
+        for i in range(len(Functions.Songs)):
             self.initial_list[i] = []
-            for j in range(len(App.Songs)):
+            for j in range(len(Functions.Songs)):
                 self.initial_list[i].append("")
             # initial_list[i][j] will be '+' if song i is better than song j
             # '-' if song i is worse than song j
@@ -67,7 +127,7 @@ class SongLists:
 
     # place one random song into the masterlist to begin with
     def first_song(self):
-        songid = randint(0, len(App.Songs))
+        songid = randint(0, len(Functions.Songs))
         self.initial_list.pop(songid)
         self.master_list.insert(0, songid)
 
@@ -82,19 +142,20 @@ class SongLists:
             [self.initial_list, self.master_list] = json.loads(file.read())
 
 
-class App:
+# contains mostly the functions that are directly accessed by the app class
+class Functions:
     Songs = []  # full list of songs and albums, not to be changed
 
     def __init__(self):
-        pass
+        self.songlists = SongLists()
+        self.get_all_songs("songs multiline form.txt")
 
-    def get_songs(self, filename: str):
+    # save the list of all songs to Functions.Songs
+    def get_all_songs(self, filename: str):
         with open(filename) as file:
             for line in csv.reader(file, delimiter=","):
-                if len(line) == 1:
-                    App.Songs.append([line[0]])
-                elif len(line) == 2:
-                    App.Songs.append([line[0], line[1]])
+                song_name = [part for part in line[0:-1]]
+                Functions.Songs.append([song_name, line[-1]])
 
     # want to choose one song from initial list then one from masterlist that
     # hasn't yet been compared to the first song
@@ -107,74 +168,150 @@ class App:
         song_M = choice(songlists.master_list[upperbound:lowerbound])
         return song_I, song_M
 
-    def load_data(self, songlists: SongLists):
-        songlists.importdata("songsranked.json")
-        songlists.initial_list = {
-            int(k): songlists.initial_list[k] for k in songlists.initial_list
+    # load previous ranking data
+    def load_data(self):
+        self.songlists.importdata("songsranked.json")
+        self.songlists.initial_list = {
+            int(k): self.songlists.initial_list[k] for k in self.songlists.initial_list
         }  # json files turn dictionary keys that are integers into strings
         # must turn them back into integers
-        print()
-        return songlists
 
-    def execute(self):
-        print(
-            """
-        Welcome to Song Ranker
-              
-        At each pair of songs, enter 1 to choose the first song,
-        or 2 to choose the second
-              
-        At any point, type in...
-        MasterList: to see the ranked list so far.
-        Save: to save and quit
+    # start a new ranking
+    def new_ranking(self):
+        self.songlists.first_song()
 
-              
-        """
-        )
+    # return names of a pair of songs
+    def get_new_song_names(self):
+        self.song_I, self.song_M = self.choose_pair(self.songlists)
+        return Functions.Songs[self.song_I][0], Functions.Songs[self.song_M][0]
 
-        # filename = input("First enter the file name: ")
-        self.get_songs("songs.txt")
+    # add info about which song is better to the song lists
+    def song_clicked(self, which_song: int):
+        self.songlists.make_comparison(self.song_I, self.song_M, which_song)
 
-        songlists = SongLists()
+    # save songlists
+    def save_data(self):
+        self.songlists.savedata("songsranked.json")
 
-        if input("Load saved data? (y/n): ") == "y":
-            songlists = self.load_data(songlists)
-
-        if songlists.master_list == []:
-            songlists.first_song()
-
-        # will later add in a command list, option to exit, option to save list so far, etc.
-        while True:
-            # first get a pair of songs
-            song_I, song_M = self.choose_pair(songlists)
-            # user chooses their favourite and the initial list is updated
-            print("Which is better?")
-            print(f"Song 1: {App.Songs[song_I][0]}")
-            print(f"Or Song 2: {App.Songs[song_M][0]}")
-            better = input("1 or 2: ")
-
-            if better == "1" or better == "2":
-                songlists.make_comparison(song_I, song_M, better)
-            elif better == "MasterList":
-                self.print_masterlist(songlists)
-            elif better == "Save":
-                songlists.savedata("songsranked.json")
-                quit()
-            print()
-
-            songlists.check(song_I)
-            print()
-
-            if len(songlists.master_list) == len(App.Songs):
-                break
-
-        self.print_masterlist(songlists)
-
+    # prints current master list in terminal
     def print_masterlist(self, songlists: SongLists):
         print()
         for songid in songlists.master_list:
-            print(App.Songs[songid][0])
+            print(Functions.Songs[songid][0])
+
+
+# takes care of user interface
+class App:
+    def __init__(self):
+        pygame.display.set_caption("Song Ranker")
+        self.window = pygame.display.set_mode((640, 480))
+        self.clock = pygame.time.Clock()
+
+        self.load_images()
+        self.functions = Functions()
+
+        self.starting_screen()
+
+    # load in album graphics and button graphics
+    def load_images(self):
+        self.images = []
+        for name in ["button", "debut"]:
+            self.images.append(pygame.image.load("images/" + name + ".png"))
+
+    # welcome screen containing 'continue' and 'new' buttons
+    def starting_screen(self):
+        load_button = Button(170, 230, self.images[0], 250, 75)
+        new_ranking_button = Button(470, 230, self.images[0], 250, 75)
+        start_main_loop = False
+
+        while True:
+            self.window.fill(pink_bg)
+
+            if load_button.draw(self.window):
+                self.functions.load_data()
+                start_main_loop = True
+            if new_ranking_button.draw(self.window):
+                self.functions.new_ranking()
+                start_main_loop = True
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+                # only start main loop once mouse button is up
+                # to prevent accidental extra clicking when screen changes
+                if event.type == pygame.MOUSEBUTTONUP and start_main_loop:
+                    self.main_loop()
+
+            display_text(self.window, ["Continue"], big_font, navy, 170, 230)
+            display_text(self.window, ["New"], big_font, navy, 470, 230)
+            pygame.display.flip()
+            self.clock.tick(60)
+
+    def main_loop(self):
+        song1, song2, song1_button, song2_button = self.new_song_buttons()
+        song_clicked = False
+        save_button = Button(590, 30, self.images[0], 80, 40)
+
+        while True:
+            display_data_saved = False
+            self.window.fill(pink_bg)
+
+            if song1_button.draw(self.window):
+                self.functions.song_clicked(1)
+                song_clicked = True
+            if song2_button.draw(self.window):
+                self.functions.song_clicked(2)
+                song_clicked = True
+            if save_button.draw(self.window):
+                self.functions.save_data()
+                display_data_saved = True
+
+            display_text(
+                self.window,
+                song1,
+                font,
+                navy,
+                190,
+                230,
+            )
+
+            display_text(
+                self.window,
+                song2,
+                font,
+                navy,
+                450,
+                230,
+            )
+
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    exit()
+                if event.type == pygame.MOUSEBUTTONUP and song_clicked:
+                    song1, song2, song1_button, song2_button = self.new_song_buttons()
+                    song_clicked = False
+
+            if display_data_saved:
+                display_text(
+                    self.window,
+                    ["Data Saved"],
+                    bigger_font,
+                    pink,
+                    320,
+                    80,
+                )
+                pygame.display.flip()
+                self.clock.tick(1 / 2)
+
+            pygame.display.flip()
+            self.clock.tick(60)
+
+    # get the next two songs ready to show in the application
+    def new_song_buttons(self):
+        song1, song2 = self.functions.get_new_song_names()
+        song1_button = Button(190, 230, self.images[1], 200, 200)
+        song2_button = Button(450, 230, self.images[1], 200, 200)
+        return song1, song2, song1_button, song2_button
 
 
 application = App()
-application.execute()
