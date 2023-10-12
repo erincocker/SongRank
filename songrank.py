@@ -1,5 +1,5 @@
 import csv
-from random import choice, sample, randint
+from random import choice, randint
 import json
 
 
@@ -108,8 +108,7 @@ class App:
         return song_I, song_M
 
     def load_data(self, songlists: SongLists):
-        filename = input("Enter filename of saved data: ")
-        songlists.importdata(filename)
+        songlists.importdata("songsranked.json")
         songlists.initial_list = {
             int(k): songlists.initial_list[k] for k in songlists.initial_list
         }  # json files turn dictionary keys that are integers into strings
@@ -157,25 +156,24 @@ class App:
             if better == "1" or better == "2":
                 songlists.make_comparison(song_I, song_M, better)
             elif better == "MasterList":
-                print()
-                for songid in songlists.master_list:
-                    print(App.Songs[songid][0])
+                self.print_masterlist(songlists)
             elif better == "Save":
-                filename = input("Enter filename: ")
-                songlists.savedata(filename)
+                songlists.savedata("songsranked.json")
                 quit()
             print()
 
-            # check to see if song_I can be placed in the masterlist
-            # if so, place it. (other checks also take place)
             songlists.check(song_I)
             print()
 
             if len(songlists.master_list) == len(App.Songs):
                 break
 
+        self.print_masterlist(songlists)
+
+    def print_masterlist(self, songlists: SongLists):
+        print()
         for songid in songlists.master_list:
-            print(App.Songs[songid])
+            print(App.Songs[songid][0])
 
 
 application = App()
