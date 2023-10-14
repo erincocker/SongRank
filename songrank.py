@@ -163,7 +163,18 @@ class Functions:
         # second song must also be within the upper and lower bounds of song_I
         # otherwise the comparison is redundant
         upperbound, lowerbound = self.songlists.find_bounds(song_I)
-        song_M = choice(self.songlists.master_list[upperbound:lowerbound])
+
+        if lowerbound - upperbound <= 6:
+            song_M = choice(self.songlists.master_list[upperbound:lowerbound])
+        else:
+            # if bounds are far apart, choose a song near the midpoint of the bounds
+            # (this is more efficient)
+            # but not exactly in the middle - this would mean boring repetition of songs
+            optimal_song_position = (upperbound + lowerbound) // 2
+            randomised_song_position = randint(
+                optimal_song_position - 3, optimal_song_position + 3
+            )
+            song_M = self.songlists.master_list[randomised_song_position]
         return song_I, song_M
 
     # load previous ranking data
@@ -196,7 +207,7 @@ class Functions:
     def print_masterlist(self):
         print()
         for songid in self.songlists.master_list:
-            print(' '.join(Functions.Songs[songid][0]))
+            print(" ".join(Functions.Songs[songid][0]))
 
 
 # takes care of user interface
@@ -213,14 +224,26 @@ class App:
     # load in album graphics and button graphics
     def load_images(self):
         self.images = {}
-        for name in ["button", "Debut", 'Fearless','SN','Red','1989','Rep','Lover','Folklore','Evermore','Midnights']:
+        for name in [
+            "button",
+            "Debut",
+            "Fearless",
+            "SN",
+            "Red",
+            "1989",
+            "Rep",
+            "Lover",
+            "Folklore",
+            "Evermore",
+            "Midnights",
+        ]:
             self.images[name] = pygame.image.load("images/" + name + ".png")
 
     # welcome screen containing 'continue' and 'new' buttons
     def starting_screen(self):
         self.functions = Functions()
-        load_button = Button(170, 230, self.images['button'], 250, 75)
-        new_ranking_button = Button(470, 230, self.images['button'], 250, 75)
+        load_button = Button(170, 230, self.images["button"], 250, 75)
+        new_ranking_button = Button(470, 230, self.images["button"], 250, 75)
         start_main_loop = False
 
         while True:
@@ -249,15 +272,15 @@ class App:
     def main_loop(self):
         song1, song2, song1_button, song2_button = self.new_song_buttons()
         song_clicked = False
-        save_button = Button(490, 30, self.images['button'], 80, 40)
-        quit_button = Button(590, 30, self.images['button'], 80, 40)
-        display_list_button = Button(90, 30, self.images['button'], 160, 40)
+        save_button = Button(490, 30, self.images["button"], 80, 40)
+        quit_button = Button(590, 30, self.images["button"], 80, 40)
+        display_list_button = Button(90, 30, self.images["button"], 160, 40)
 
         while True:
             display_data_saved = False
             self.window.fill(pink_bg)
-            pygame.draw.rect(self.window, navy, (75,125,210,210))
-            pygame.draw.rect(self.window, navy, (355,125,210,210))
+            pygame.draw.rect(self.window, navy, (75, 125, 210, 210))
+            pygame.draw.rect(self.window, navy, (355, 125, 210, 210))
 
             if song1_button.draw(self.window):
                 self.functions.song_clicked(1)
@@ -358,7 +381,6 @@ class App:
             320,
             230,
         )
-
 
 
 application = App()
