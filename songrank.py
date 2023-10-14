@@ -80,10 +80,10 @@ class SongLists:
         self.master_list = []
 
     # save info from a comparison to the initial list
-    def make_comparison(self, song_I: int, song_M: int, better: str):
-        if better == "1":
+    def make_comparison(self, song_I: int, song_M: int, better: int):
+        if better == 1:
             self.initial_list[song_I][song_M] = "+"
-        elif better == "2":
+        elif better == 2:
             self.initial_list[song_I][song_M] = "-"
 
     # return the bounds for the song's possible position in the masterlist
@@ -99,7 +99,6 @@ class SongLists:
                 upperbound = max(upperbound, i + 1)
             elif comparison == "+":
                 lowerbound = min(lowerbound, i)
-
         return upperbound, lowerbound
 
     # check if song1 can be added to masterlist
@@ -108,7 +107,6 @@ class SongLists:
     # then add this info to songA
     def check(self, songid: int):
         upperbound, lowerbound = self.find_bounds(songid)
-
         if upperbound > lowerbound:
             raise ValueError("CONTRADICTION!")
 
@@ -147,8 +145,8 @@ class Functions:
     Songs = []  # full list of songs and albums, not to be changed
 
     def __init__(self):
-        self.songlists = SongLists()
         self.get_all_songs("songs multiline form.txt")
+        self.songlists = SongLists()
 
     # save the list of all songs to Functions.Songs
     def get_all_songs(self, filename: str):
@@ -160,12 +158,12 @@ class Functions:
     # want to choose one song from initial list then one from masterlist that
     # hasn't yet been compared to the first song
     # returns id of the songs to be compared, song S from initial list, song M from Masterlist
-    def choose_pair(self, songlists: SongLists):
-        song_I = choice(list(songlists.initial_list.keys()))
+    def choose_pair(self):
+        song_I = choice(list(self.songlists.initial_list.keys()))
         # second song must also be within the upper and lower bounds of song_I
         # otherwise the comparison is redundant
-        upperbound, lowerbound = songlists.find_bounds(song_I)
-        song_M = choice(songlists.master_list[upperbound:lowerbound])
+        upperbound, lowerbound = self.songlists.find_bounds(song_I)
+        song_M = choice(self.songlists.master_list[upperbound:lowerbound])
         return song_I, song_M
 
     # load previous ranking data
@@ -180,24 +178,25 @@ class Functions:
     def new_ranking(self):
         self.songlists.first_song()
 
-    # return names of a pair of songs
+    # return a pair of songs (both name and album)
     def get_new_song_names(self):
-        self.song_I, self.song_M = self.choose_pair(self.songlists)
-        return Functions.Songs[self.song_I][0], Functions.Songs[self.song_M][0]
+        self.song_I, self.song_M = self.choose_pair()
+        return Functions.Songs[self.song_I], Functions.Songs[self.song_M]
 
     # add info about which song is better to the song lists
     def song_clicked(self, which_song: int):
         self.songlists.make_comparison(self.song_I, self.song_M, which_song)
+        self.songlists.check(self.song_I)
 
     # save songlists
     def save_data(self):
         self.songlists.savedata("songsranked.json")
 
     # prints current master list in terminal
-    def print_masterlist(self, songlists: SongLists):
+    def print_masterlist(self):
         print()
-        for songid in songlists.master_list:
-            print(Functions.Songs[songid][0])
+        for songid in self.songlists.master_list:
+            print(' '.join(Functions.Songs[songid][0]))
 
 
 # takes care of user interface
@@ -208,20 +207,20 @@ class App:
         self.clock = pygame.time.Clock()
 
         self.load_images()
-        self.functions = Functions()
 
         self.starting_screen()
 
     # load in album graphics and button graphics
     def load_images(self):
-        self.images = []
-        for name in ["button", "debut"]:
-            self.images.append(pygame.image.load("images/" + name + ".png"))
+        self.images = {}
+        for name in ["button", "Debut", 'Fearless','SN','Red','1989','Rep','Lover','Folklore','Evermore','Midnights']:
+            self.images[name] = pygame.image.load("images/" + name + ".png")
 
     # welcome screen containing 'continue' and 'new' buttons
     def starting_screen(self):
-        load_button = Button(170, 230, self.images[0], 250, 75)
-        new_ranking_button = Button(470, 230, self.images[0], 250, 75)
+        self.functions = Functions()
+        load_button = Button(170, 230, self.images['button'], 250, 75)
+        new_ranking_button = Button(470, 230, self.images['button'], 250, 75)
         start_main_loop = False
 
         while True:
@@ -250,11 +249,15 @@ class App:
     def main_loop(self):
         song1, song2, song1_button, song2_button = self.new_song_buttons()
         song_clicked = False
-        save_button = Button(590, 30, self.images[0], 80, 40)
+        save_button = Button(490, 30, self.images['button'], 80, 40)
+        quit_button = Button(590, 30, self.images['button'], 80, 40)
+        display_list_button = Button(90, 30, self.images['button'], 160, 40)
 
         while True:
             display_data_saved = False
             self.window.fill(pink_bg)
+            pygame.draw.rect(self.window, navy, (75,125,210,210))
+            pygame.draw.rect(self.window, navy, (355,125,210,210))
 
             if song1_button.draw(self.window):
                 self.functions.song_clicked(1)
@@ -265,24 +268,12 @@ class App:
             if save_button.draw(self.window):
                 self.functions.save_data()
                 display_data_saved = True
+            if quit_button.draw(self.window):
+                self.starting_screen()
+            if display_list_button.draw(self.window):
+                self.functions.print_masterlist()
 
-            display_text(
-                self.window,
-                song1,
-                font,
-                navy,
-                190,
-                230,
-            )
-
-            display_text(
-                self.window,
-                song2,
-                font,
-                navy,
-                450,
-                230,
-            )
+            self.display_main_loop_text(song1[0], song2[0])
 
             for event in pygame.event.get():
                 if event.type == pygame.QUIT:
@@ -309,9 +300,65 @@ class App:
     # get the next two songs ready to show in the application
     def new_song_buttons(self):
         song1, song2 = self.functions.get_new_song_names()
-        song1_button = Button(190, 230, self.images[1], 200, 200)
-        song2_button = Button(450, 230, self.images[1], 200, 200)
+        song1_button = Button(180, 230, self.images[song1[1]], 200, 200)
+        song2_button = Button(460, 230, self.images[song2[1]], 200, 200)
         return song1, song2, song1_button, song2_button
+
+    def display_main_loop_text(self, song1, song2):
+        display_text(
+            self.window,
+            song1,
+            font,
+            navy,
+            180,
+            230,
+        )
+
+        display_text(
+            self.window,
+            song2,
+            font,
+            navy,
+            460,
+            230,
+        )
+
+        display_text(
+            self.window,
+            ["Save"],
+            font,
+            navy,
+            490,
+            30,
+        )
+
+        display_text(
+            self.window,
+            ["Quit"],
+            font,
+            navy,
+            590,
+            30,
+        )
+
+        display_text(
+            self.window,
+            ["Display List"],
+            font,
+            navy,
+            90,
+            30,
+        )
+
+        display_text(
+            self.window,
+            ["OR"],
+            font,
+            navy,
+            320,
+            230,
+        )
+
 
 
 application = App()
