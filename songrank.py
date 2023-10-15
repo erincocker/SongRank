@@ -34,12 +34,14 @@ class Button:
         self,
         centre_x: int,
         centre_y: int,
-        image,
+        image1,
+        image2,
         desired_width: int,
         desired_height: int,
     ):
-        self.image = pygame.transform.scale(image, (desired_width, desired_height))
-        self.rect = self.image.get_rect()
+        self.image1 = pygame.transform.scale(image1, (desired_width, desired_height))
+        self.image2 = pygame.transform.scale(image2, (desired_width, desired_height))
+        self.rect = self.image1.get_rect()
         self.rect.center = (centre_x, centre_y)
         self.clicked = False
 
@@ -58,7 +60,12 @@ class Button:
         if pygame.mouse.get_pressed()[0] == 0:
             self.clicked = False
 
-        surface.blit(self.image, (self.rect.x, self.rect.y))
+        # show a different coloured border if mouse is hovering over the button.
+        if self.rect.collidepoint(position):
+            surface.blit(self.image2, (self.rect.x, self.rect.y))
+        else:
+            surface.blit(self.image1, (self.rect.x, self.rect.y))
+
         return button_press
 
 
@@ -223,7 +230,8 @@ class App:
 
     # load in album graphics and button graphics
     def load_images(self):
-        self.images = {}
+        self.images1 = {}
+        self.images2 = {}
         for name in [
             "button",
             "Debut",
@@ -237,13 +245,18 @@ class App:
             "Evermore",
             "Midnights",
         ]:
-            self.images[name] = pygame.image.load("images/" + name + ".png")
+            self.images1[name] = pygame.image.load("images/" + name + ".png")
+            self.images2[name] = pygame.image.load("images2/" + name + ".png")
 
     # welcome screen containing 'continue' and 'new' buttons
     def starting_screen(self):
         self.functions = Functions()
-        load_button = Button(170, 230, self.images["button"], 250, 75)
-        new_ranking_button = Button(470, 230, self.images["button"], 250, 75)
+        load_button = Button(
+            170, 230, self.images1["button"], self.images2["button"], 250, 75
+        )
+        new_ranking_button = Button(
+            470, 230, self.images1["button"], self.images2["button"], 250, 75
+        )
         start_main_loop = False
 
         while True:
@@ -272,15 +285,21 @@ class App:
     def main_loop(self):
         song1, song2, song1_button, song2_button = self.new_song_buttons()
         song_clicked = False
-        save_button = Button(490, 30, self.images["button"], 80, 40)
-        quit_button = Button(590, 30, self.images["button"], 80, 40)
-        display_list_button = Button(90, 30, self.images["button"], 160, 40)
+        save_button = Button(
+            490, 30, self.images1["button"], self.images2["button"], 80, 40
+        )
+        quit_button = Button(
+            590, 30, self.images1["button"], self.images2["button"], 80, 40
+        )
+        display_list_button = Button(
+            90, 30, self.images1["button"], self.images2["button"], 160, 40
+        )
 
         while True:
             display_data_saved = False
             self.window.fill(pink_bg)
-            pygame.draw.rect(self.window, navy, (75, 125, 210, 210))
-            pygame.draw.rect(self.window, navy, (355, 125, 210, 210))
+            # pygame.draw.rect(self.window, navy, (75, 125, 210, 210))
+            # pygame.draw.rect(self.window, navy, (355, 125, 210, 210))
 
             if song1_button.draw(self.window):
                 self.functions.song_clicked(1)
@@ -323,8 +342,12 @@ class App:
     # get the next two songs ready to show in the application
     def new_song_buttons(self):
         song1, song2 = self.functions.get_new_song_names()
-        song1_button = Button(180, 230, self.images[song1[1]], 200, 200)
-        song2_button = Button(460, 230, self.images[song2[1]], 200, 200)
+        song1_button = Button(
+            180, 230, self.images1[song1[1]], self.images2[song1[1]], 200, 200
+        )
+        song2_button = Button(
+            460, 230, self.images1[song2[1]], self.images2[song2[1]], 200, 200
+        )
         return song1, song2, song1_button, song2_button
 
     def display_main_loop_text(self, song1, song2):
