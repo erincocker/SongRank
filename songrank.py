@@ -171,7 +171,7 @@ class Functions:
         # otherwise the comparison is redundant
         upperbound, lowerbound = self.songlists.find_bounds(song_I)
 
-        if lowerbound - upperbound <= 6:
+        if lowerbound - upperbound <= 10:
             song_M = choice(self.songlists.master_list[upperbound:lowerbound])
         else:
             # if bounds are far apart, choose a song near the midpoint of the bounds
@@ -179,7 +179,7 @@ class Functions:
             # but not exactly in the middle - this would mean boring repetition of songs
             optimal_song_position = (upperbound + lowerbound) // 2
             randomised_song_position = randint(
-                optimal_song_position - 3, optimal_song_position + 3
+                optimal_song_position - 5, optimal_song_position + 5
             )
             song_M = self.songlists.master_list[randomised_song_position]
         return song_I, song_M

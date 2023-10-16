@@ -40,7 +40,7 @@ Bye Bye Baby,Fearless
 Mine,SN
 Sparks Fly,SN
 Back To,December,SN
-Speak now,SN
+Speak Now,SN
 Dear John,SN
 Mean,SN
 The Story,Of Us,SN
