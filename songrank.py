@@ -2,7 +2,7 @@ import csv
 from random import choice, randint
 import json
 import pygame
-
+#new test now
 pygame.init()
 
 pink_bg = (239, 208, 202)
