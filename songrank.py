@@ -76,9 +76,7 @@ class SongLists:
         # though it's a dictionary so we can access songs by id
         self.initial_list = {}
         for i in range(len(Functions.Songs)):
-            self.initial_list[i] = []
-            for j in range(len(Functions.Songs)):
-                self.initial_list[i].append("")
+            self.initial_list[i] = ["" for j in range(len(Functions.Songs))]
             # initial_list[i][j] will be '+' if song i is better than song j
             # '-' if song i is worse than song j
             # or '' if they haven't been compared
@@ -119,16 +117,16 @@ class SongLists:
 
         # if upper = lower, position in masterlist is determined
         # place the song in masterlist and remove it from initial list
-        elif upperbound == lowerbound:
+        if upperbound == lowerbound:
             self.master_list.insert(upperbound, songid)
             self.initial_list.pop(songid)
+            return
 
         # otherwise, add any extra inferred info to initial list and move on
-        else:
-            for i in range(0, upperbound):
-                self.initial_list[songid][self.master_list[i]] = "-"
-            for i in range(lowerbound + 1, len(self.master_list)):
-                self.initial_list[songid][self.master_list[i]] = "+"
+        for i in range(0, upperbound):
+            self.initial_list[songid][self.master_list[i]] = "-"
+        for i in range(lowerbound + 1, len(self.master_list)):
+            self.initial_list[songid][self.master_list[i]] = "+"
 
     # place one random song into the masterlist to begin with
     def first_song(self):
@@ -158,7 +156,7 @@ class Functions:
     # save the list of all songs to Functions.Songs
     def get_all_songs(self, filename: str):
         with open(filename) as file:
-            for line in csv.reader(file, delimiter=","):
+            for line in csv.reader(file, delimiter=",", escapechar="\\"):
                 song_name = [part for part in line[0:-1]]
                 Functions.Songs.append([song_name, line[-1]])
 
@@ -284,16 +282,12 @@ class App:
 
     def main_loop(self):
         song1, song2, song1_button, song2_button = self.new_song_buttons()
+        (
+            save_button,
+            quit_button,
+            display_list_button,
+        ) = self.initialise_main_loop_buttons()
         song_clicked = False
-        save_button = Button(
-            490, 30, self.images1["button"], self.images2["button"], 80, 40
-        )
-        quit_button = Button(
-            590, 30, self.images1["button"], self.images2["button"], 80, 40
-        )
-        display_list_button = Button(
-            90, 30, self.images1["button"], self.images2["button"], 160, 40
-        )
 
         while True:
             display_data_saved = False
@@ -349,6 +343,18 @@ class App:
             460, 230, self.images1[song2[1]], self.images2[song2[1]], 200, 200
         )
         return song1, song2, song1_button, song2_button
+
+    def initialise_main_loop_buttons(self):
+        save_button = Button(
+            490, 30, self.images1["button"], self.images2["button"], 80, 40
+        )
+        quit_button = Button(
+            590, 30, self.images1["button"], self.images2["button"], 80, 40
+        )
+        display_list_button = Button(
+            90, 30, self.images1["button"], self.images2["button"], 160, 40
+        )
+        return save_button, quit_button, display_list_button
 
     def display_main_loop_text(self, song1, song2):
         display_text(

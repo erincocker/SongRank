@@ -20,11 +20,9 @@ Continue until all songs ranked successfully.
 
 to do next:
 
- include importing/exporting/saving functionality so user can stop
- and later come back to the same list
-
- change song picker so it picks optimally: pick the song halfway between
- the upper and lower bounds
-
  make everything neater and clearer - both on the ui side
  and on the code side
+
+ multiple save slots?
+
+ optimise song picking even more - potentially more random but also more efficient?
